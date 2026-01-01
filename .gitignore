@@ -1,3 +1,5 @@
+# Env
+/.env
 # phpstorm project files
 .idea
 
@@ -24,3 +26,19 @@ Thumbs.db
 
 # Codeception C3
 c3.php
+
+# docker
+/docker/mysql/db
+/docker/postgres/db
+/docker/nginx/logs
+/docker/caddy/logs
+/docker/nginx/.htpasswd
+/docker/php/bash_history
+/docker/php/error_logs
+
+###> lexik/jwt-authentication-bundle ###
+/api/config/jwt/*.pem
+/api/config/jwt
+api/config/jwt
+###< lexik/jwt-authentication-bundle ###
+
