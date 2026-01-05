@@ -15,4 +15,19 @@ return Group::create()
         Route::methods([Method::GET, Method::POST], '/say')
             ->action(Web\Echo\Action::class)
             ->name('web/echo/say'),
+
+        Group::create('/pages')->routes(
+            Route::get('')
+                ->action(Web\Page\ListAction::class)
+                ->name('page/list'),
+            Route::get('/{slug}')
+                ->action(Web\Page\ViewAction::class)
+                ->name('page/view'),
+            Route::methods([Method::GET, Method::POST], '/{slug}/edit')
+                ->action(Web\Page\EditAction::class)
+                ->name('page/edit'),
+            Route::post('/{slug}/delete')
+                ->action(Web\Page\DeleteAction::class)
+                ->name('page/delete'),
+        ),
     );

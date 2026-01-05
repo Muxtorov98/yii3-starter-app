@@ -11,4 +11,7 @@ return Group::create('/api')
         Route::get('/say[/{message}]')
             ->action(Api\Echo\Action::class)
             ->name('echo/say'),
+        Route::get('/pages/list')
+             ->action(Api\Page\PageListAction::class)
+             ->name('page/list'),
     );

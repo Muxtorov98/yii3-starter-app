@@ -1,8 +1,16 @@
 <?php
 
-namespace App\Api\Page;
+declare(strict_types=1);
 
-class PageDto
+namespace App\Api\Page\Dto;
+
+final readonly class PageDto
 {
-
+    public function __construct(
+        public string $id,
+        public string $title,
+        public string $slug,
+        public string $text,
+        public string $createdAt,
+    ) {}
 }
