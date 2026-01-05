@@ -1,0 +1,47 @@
+variables:
+  NAMESPACE: muxtorov-t
+  DEPLOYMENT: goo-app
+  DOMAIN: example.uz
+  PROJECT_PORT: 8081
+  REPLICA_COUNT: 2
+  IMAGE_PULL_SECRETS_NAME: gits-regs
+
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "tulqin"
+
+
+stages:
+  - build
+  - deploy
+
+services:
+  - docker:20.10.16-dind
+
+before_script:
+  - docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password $CI_REGISTRY_PASSWORD
+  - apk update && apk --no-cache add build-base openssh curl yq gettext
+  - curl -LO "https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl"
+  - chmod +x ./kubectl && mv ./kubectl /usr/local/bin/kubectl
+  - mkdir -p ~/.kube && echo "$KUBECONFIG" > ~/.kube/config
+
+
+build_job:
+  stage: build
+  tags:
+    - goo-1
+  script:
+    - docker build -t ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest .
+    - docker push ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest
+    - docker tag ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${CI_PIPELINE_IID}
+    - docker push ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${CI_PIPELINE_IID}
+    - docker rmi ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:latest
+    - docker rmi ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${CI_PIPELINE_IID}
+
+deploy_to_prod:
+  stage: deploy
+  script:
+    - envsubst < deploy/prod.yaml | kubectl apply -f - -n $NAMESPACE
+
+  only:
+    - tulqin

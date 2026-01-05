@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: $DEPLOYMENT
+    namespace: $NAMESPACE
+    labels:
+        app: $DEPLOYMENT
+spec:
+    replicas: $REPLICA_COUNT
+    selector:
+        matchLabels:
+            app: $DEPLOYMENT
+    template:
+        metadata:
+            labels:
+                app: $DEPLOYMENT
+        spec:
+            imagePullSecrets:
+                - name: $IMAGE_PULL_SECRETS_NAME
+            containers:
+                - name: $DEPLOYMENT
+                  image: ${CI_REGISTRY}/${CI_PROJECT_NAMESPACE}/${CI_PROJECT_NAME}:${CI_PIPELINE_IID}
+                  ports:
+                      - containerPort: $PROJECT_PORT
+                  imagePullPolicy: Always
+            restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: $DEPLOYMENT-service
+    namespace: $NAMESPACE
+spec:
+    selector:
+        app: $DEPLOYMENT
+    ports:
+        - protocol: TCP
+          port: 80
+          targetPort: $PROJECT_PORT
+    type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+    name: $DEPLOYMENT
+    namespace: $NAMESPACE
+    annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+    ingressClassName: nginx
+    rules:
+        - host: $DOMAIN
+          http:
+              paths:
+                  - backend:
+                        service:
+                            name: $DEPLOYMENT-service
+                            port:
+                                number: 80
+                    path: /
+                    pathType: Prefix
+    tls:
+        - hosts:
+              - $DOMAIN
+          secretName: $DEPLOYMENT-secret-tls
+
